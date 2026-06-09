@@ -1,18 +1,46 @@
-"""
-main_api.py  —  LΞNS·AI FastAPI Backend
-Wraps the existing run_pipeline() from main.py into a web API.
-"""
+print("STEP 1: main_api started")
 
 import asyncio
 import json
 import time
 
+print("STEP 2: basic imports done")
+
 from fastapi import FastAPI
+print("STEP 3")
+
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
+
+print("STEP 4")
+
+from utils.audio_processor import process_input
+print("STEP 5")
+
+from core.transcriber import transcribe_all
+print("STEP 6")
+
+from core.summarizer import summarize, generate_title
+print("STEP 7")
+
+from core.extractor import (
+    extract_action_items,
+    extract_key_decisions,
+    extract_questions,
+)
+print("STEP 8")
+
+from core.rag_engine import build_rag_chain, ask_question
+print("STEP 9")
+
+load_dotenv()
+print("STEP 10")
+
+app = FastAPI(title="LΞNS·AI", version="1.0.0")
+print("STEP 11")
 
 # ── Import YOUR existing pipeline functions ──────────────────────────────────
 from utils.audio_processor import process_input
