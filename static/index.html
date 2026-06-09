@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>LΞNS·AI — Video Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Clash+Display:wght@400;500;600;700&family=Cabinet+Grotesk:wght@400;500;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="/static/style.css"/>
+</head>
+<body>
+
+<!-- ░░ BACKGROUND CANVAS ░░ -->
+<canvas id="bgCanvas"></canvas>
+
+<!-- ░░ APP SHELL ░░ -->
+<div class="app" id="app">
+
+  <!-- ══ SIDEBAR ══ -->
+  <aside class="sidebar" id="sidebar">
+
+    <!-- Brand -->
+    <div class="brand">
+      <div class="brand-mark">
+        <div class="bm-outer"></div>
+        <div class="bm-mid"></div>
+        <div class="bm-inner"></div>
+        <div class="bm-dot"></div>
+      </div>
+      <div>
+        <div class="brand-name">LΞN<em>S</em>·AI</div>
+        <div class="brand-sub">Video Intelligence</div>
+      </div>
+    </div>
+
+    <!-- Nav tabs -->
+    <nav class="nav-tabs">
+      <button class="nav-tab active" data-tab="analyse" onclick="switchTab('analyse')">
+        <span class="nav-tab-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </span>
+        Analyse
+      </button>
+      <button class="nav-tab" data-tab="chat" onclick="switchTab('chat')" id="tabChat">
+        <span class="nav-tab-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        </span>
+        Chat
+        <span class="nav-badge" id="chatBadge" style="display:none">●</span>
+      </button>
+    </nav>
+
+    <!-- Source form -->
+    <div class="sidebar-form" id="tabPanelAnalyse">
+
+      <div class="form-group">
+        <label class="form-label">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.26a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
+          Video Source
+        </label>
+        <div class="input-field">
+          <input type="text" id="sourceInput" placeholder="YouTube URL or /path/to/file.mp4" autocomplete="off"/>
+          <div class="input-glow"></div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/></svg>
+          Language
+        </label>
+        <div class="select-field">
+          <select id="langSelect">
+            <option value="english">English</option>
+            <option value="hinglish">Hinglish</option>
+          </select>
+          <svg class="select-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+      </div>
+
+      <button class="run-btn" id="runBtn" onclick="startAnalysis()">
+        <span class="run-btn-bg"></span>
+        <span class="run-btn-content">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          <span id="runBtnText">Run Analysis</span>
+        </span>
+      </button>
+
+      <!-- Pipeline -->
+      <div class="pipeline-wrap" id="pipelineWrap">
+        <div class="pipeline-header">
+          <span class="pipeline-title">Pipeline</span>
+          <span class="pipeline-status" id="pipelineStatus">Idle</span>
+        </div>
+        <div class="pipeline-track">
+          <div class="pipeline-progress" id="pipelineProgress" style="width:0%"></div>
+        </div>
+        <div class="pip-steps">
+          <div class="pip-step" id="pip-audio">
+            <div class="pip-step-left">
+              <div class="pip-icon-wrap">🔊</div>
+              <span>Audio</span>
+            </div>
+            <div class="pip-state-icon"></div>
+          </div>
+          <div class="pip-step" id="pip-transcript">
+            <div class="pip-step-left">
+              <div class="pip-icon-wrap">📝</div>
+              <span>Transcription</span>
+            </div>
+            <div class="pip-state-icon"></div>
+          </div>
+          <div class="pip-step" id="pip-title">
+            <div class="pip-step-left">
+              <div class="pip-icon-wrap">🏷</div>
+              <span>Title</span>
+            </div>
+            <div class="pip-state-icon"></div>
+          </div>
+          <div class="pip-step" id="pip-summary">
+            <div class="pip-step-left">
+              <div class="pip-icon-wrap">📋</div>
+              <span>Summary</span>
+            </div>
+            <div class="pip-state-icon"></div>
+          </div>
+          <div class="pip-step" id="pip-extract">
+            <div class="pip-step-left">
+              <div class="pip-icon-wrap">🔍</div>
+              <span>Extraction</span>
+            </div>
+            <div class="pip-state-icon"></div>
+          </div>
+          <div class="pip-step" id="pip-rag">
+            <div class="pip-step-left">
+              <div class="pip-icon-wrap">🧠</div>
+              <span>RAG Engine</span>
+            </div>
+            <div class="pip-state-icon"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Chat sidebar panel -->
+    <div class="sidebar-form" id="tabPanelChat" style="display:none">
+      <div class="chat-info-box">
+        <div class="chat-info-icon">💬</div>
+        <div class="chat-info-text">Chat is available after analysis completes.</div>
+      </div>
+    </div>
+
+    <!-- Sidebar footer -->
+    <div class="sidebar-footer">
+      <div class="sf-status" id="sfStatus">
+        <span class="sf-dot idle"></span>
+        <span id="sfStatusText">Ready</span>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- ══ MAIN CONTENT ══ -->
+  <main class="content" id="mainContent">
+
+    <!-- ── HERO ── -->
+    <section class="hero-section" id="heroSection">
+      <div class="hero-bg-grid"></div>
+      <div class="hero-center">
+        <div class="hero-badge">
+          <span class="hero-badge-dot"></span>
+          Video Intelligence Platform
+        </div>
+        <h1 class="hero-heading">
+          <span class="hero-h-line1">Understand your</span>
+          <span class="hero-h-line2">videos with <em>AI</em></span>
+        </h1>
+        <p class="hero-para">
+          Paste any YouTube URL or video file path.<br/>
+          Get transcription, summary, insights and chat — instantly.
+        </p>
+        <div class="hero-feature-row">
+          <div class="hf-card">
+            <div class="hf-icon">⚡</div>
+            <div class="hf-label">Fast Pipeline</div>
+          </div>
+          <div class="hf-card">
+            <div class="hf-icon">🎯</div>
+            <div class="hf-label">Accurate AI</div>
+          </div>
+          <div class="hf-card">
+            <div class="hf-icon">💬</div>
+            <div class="hf-label">RAG Chat</div>
+          </div>
+          <div class="hf-card">
+            <div class="hf-icon">📊</div>
+            <div class="hf-label">Deep Insights</div>
+          </div>
+        </div>
+        <div class="hero-hint">← Enter your source in the sidebar to begin</div>
+      </div>
+    </section>
+
+    <!-- ── RESULTS ── -->
+    <section class="results-section" id="resultsSection" style="display:none">
+
+      <!-- Top bar -->
+      <div class="results-topbar">
+        <div class="results-title-wrap">
+          <div class="rtw-label">Session</div>
+          <div class="rtw-title" id="resultTitle">—</div>
+        </div>
+        <div class="results-actions">
+          <button class="ra-btn" id="copyAllBtn" onclick="copyAll()" title="Copy all results">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            Export
+          </button>
+          <button class="ra-btn ra-btn-ghost" onclick="resetUI()" title="New analysis">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+            New
+          </button>
+        </div>
+      </div>
+
+      <!-- Stats strip -->
+      <div class="stats-strip" id="statsStrip">
+        <div class="stat-pill" id="statWords">
+          <span class="sp-icon">📄</span>
+          <span class="sp-val" id="statWordsVal">—</span>
+          <span class="sp-key">words</span>
+        </div>
+        <div class="stat-pill">
+          <span class="sp-icon">⏱</span>
+          <span class="sp-val" id="statTimeVal">—</span>
+          <span class="sp-key">est. read</span>
+        </div>
+        <div class="stat-pill">
+          <span class="sp-icon">✅</span>
+          <span class="sp-val" id="statActionsVal">—</span>
+          <span class="sp-key">actions</span>
+        </div>
+        <div class="stat-pill">
+          <span class="sp-icon">🔑</span>
+          <span class="sp-val" id="statDecsVal">—</span>
+          <span class="sp-key">decisions</span>
+        </div>
+      </div>
+
+      <!-- Tab bar -->
+      <div class="result-tabs">
+        <button class="rt-tab active" onclick="switchResultTab('overview')" data-rtab="overview">Overview</button>
+        <button class="rt-tab" onclick="switchResultTab('transcript')" data-rtab="transcript">Transcript</button>
+        <button class="rt-tab" onclick="switchResultTab('insights')" data-rtab="insights">Insights</button>
+        <button class="rt-tab" onclick="switchResultTab('chat')" data-rtab="chat">
+          Chat
+          <span class="rt-badge" id="rtChatBadge" style="display:none"></span>
+        </button>
+      </div>
+
+      <!-- ── Overview tab ── -->
+      <div class="rt-panel active" id="panel-overview">
+        <div class="panel-grid-2">
+
+          <div class="glass-card">
+            <div class="gc-header">
+              <div class="gc-dot" style="background:#4d9fff"></div>
+              <span class="gc-title">Summary</span>
+            </div>
+            <div class="gc-body" id="summaryBody"></div>
+          </div>
+
+          <div class="panel-col-right">
+            <div class="glass-card mini-card">
+              <div class="gc-header">
+                <div class="gc-dot" style="background:#3ecf8e"></div>
+                <span class="gc-title">Action Items</span>
+              </div>
+              <div class="gc-body" id="actionsBody"></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ── Transcript tab ── -->
+      <div class="rt-panel" id="panel-transcript">
+        <div class="glass-card transcript-card-full">
+          <div class="gc-header">
+            <div class="gc-dot" style="background:#a78bfa"></div>
+            <span class="gc-title">Full Transcript</span>
+            <button class="copy-icon-btn" onclick="copyTranscript()" title="Copy">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            </button>
+          </div>
+          <div class="transcript-scroll" id="transcriptBody"></div>
+        </div>
+      </div>
+
+      <!-- ── Insights tab ── -->
+      <div class="rt-panel" id="panel-insights">
+        <div class="panel-grid-3">
+          <div class="glass-card">
+            <div class="gc-header">
+              <div class="gc-dot" style="background:#3ecf8e"></div>
+              <span class="gc-title">Action Items</span>
+            </div>
+            <div class="gc-body" id="actionsBody2"></div>
+          </div>
+          <div class="glass-card">
+            <div class="gc-header">
+              <div class="gc-dot" style="background:#f5c842"></div>
+              <span class="gc-title">Key Decisions</span>
+            </div>
+            <div class="gc-body" id="decisionsBody"></div>
+          </div>
+          <div class="glass-card">
+            <div class="gc-header">
+              <div class="gc-dot" style="background:#f07070"></div>
+              <span class="gc-title">Open Questions</span>
+            </div>
+            <div class="gc-body" id="questionsBody"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Chat tab ── -->
+      <div class="rt-panel" id="panel-chat">
+        <div class="chat-layout">
+
+          <div class="chat-messages" id="chatMessages">
+            <div class="chat-welcome">
+              <div class="cw-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+              </div>
+              <div class="cw-title">Ask LΞNS·AI</div>
+              <div class="cw-desc">Ask anything about your video — key moments, decisions, action items, or any specific detail.</div>
+              <div class="cw-suggestions" id="cwSuggestions">
+                <button class="cw-chip" onclick="useChip(this)">What are the main topics?</button>
+                <button class="cw-chip" onclick="useChip(this)">Summarise key decisions</button>
+                <button class="cw-chip" onclick="useChip(this)">List all action items</button>
+                <button class="cw-chip" onclick="useChip(this)">What questions were raised?</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="chat-input-area">
+            <div class="chat-input-box">
+              <textarea id="chatInput" placeholder="Ask anything about your video…" rows="1" onkeydown="chatKeydown(event)" oninput="autoResize(this)"></textarea>
+              <button class="chat-send" id="chatSendBtn" onclick="sendChat()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              </button>
+            </div>
+            <div class="chat-footer-note">LΞNS·AI answers based on your video transcript only.</div>
+          </div>
+
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+</div>
+
+<!-- ░░ TOAST ░░ -->
+<div class="toast" id="toast"></div>
+
+<script src="/static/script.js"></script>
+</body>
+</html>
